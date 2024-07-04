@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+$isLoggedIn = isset($_SESSION['user_id']);
 ?>
 
 <!DOCTYPE html>
@@ -25,9 +26,14 @@ session_start();
             <h2 class="text-4xl font-bold mb-6">Welcome to MyWebsite</h2>
             <p class="text-lg mb-6">Join us and explore the amazing world of opportunities.</p>
             <div class="space-x-4">
+
+
+                <?php if (!$isLoggedIn): ?>
                 <a href="index.php" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Login</a>
                 <a href="register.php" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">Register</a>
-                <?php if (isset($_SESSION['user_id'])): ?>
+                <?php endif; ?>
+
+                <?php if ($isLoggedIn): ?>
                     <a href="dashboard.php" class="bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600">Dashboard</a>
                 <?php endif; ?>
             </div>

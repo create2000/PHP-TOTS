@@ -1,10 +1,12 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: Tutorial/index.php');
-    exit;
-}
+// if (!isset($_SESSION['user_id'])) {
+//     header('Location: index.php');
+//     exit;
+// }
+$name = $_SESSION['user_last name'];
+
 ?>
 
 <!DOCTYPE html>
@@ -32,7 +34,7 @@ if (!isset($_SESSION['user_id'])) {
   <!-- Sidebar -->
   <div id="sidebar" class="sidebar sidebar-expanded bg-gray-800 text-white flex flex-col">
     <div class="flex items-center justify-between p-4">
-      <span class="text-lg font-bold">Admin Dashboard</span>
+      <span class="text-lg font-bold">Hello <?php echo htmlspecialchars($name)?></span>
       <button id="toggleSidebar" class="text-white">
         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 5h12a1 1 0 010 2H4a1 1 0 110-2zm0 4h12a1 1 0 010 2H4a1 1 0 110-2zm0 4h12a1 1 0 010 2H4a1 1 0 110-2z" clip-rule="evenodd"/></svg>
       </button>
@@ -62,7 +64,7 @@ if (!isset($_SESSION['user_id'])) {
     <!-- Header -->
     <header class="bg-white shadow p-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">Admin Dashboard</h1>
+        <h1 class="text-xl font-bold"><?php echo htmlspecialchars($name) . "'s"?> Dashboard</h1>
         <div class="flex items-center space-x-4">
           <button class="text-gray-600 hover:text-gray-800">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.707 12.707a1 1 0 01-1.414-1.414l2-2a1 1 0 011.414 0l2 2a1 1 0 01-1.414 1.414L10 11.414l-1.293 1.293z"/></svg>

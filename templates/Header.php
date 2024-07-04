@@ -19,6 +19,12 @@
                 <a href="#" class="mx-2 hover:underline">Home</a>
                 <a href="#about" class="mx-2 hover:underline">About</a>
                 <a href="#contact" class="mx-2 hover:underline">Contact</a>
+
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="logout.php" class="text-white bg-black hover:bg-gray-200 hover:text-black rounded-full px-4 py-2 inline-block mt-4" style="border-radius: 9999px;">Logout</a>
+
+                <?php endif; ?>
+
             </nav>
         </div>
     </header>

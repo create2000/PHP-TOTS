@@ -1,17 +1,27 @@
 <?php 
-require 'config\db.php';
+require 'config/db.php';
 
-$errors = array('name' => '', 'email' => '', 'password' => '' );
+$errors = array('first_name' => '', 'last_name' => '', 'email' => '', 'password' => '' );
 if(isset($_POST['submit'])) {
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        // Validate name
-        if (empty($_POST['name'])) {
-            $errors['name'] = 'A name must be provided <br />';
+        // Validate first name
+        if (empty($_POST['first_name'])) {
+            $errors['first_name'] = 'First name must be provided <br />';
         } else {
-            $name = $_POST['name'];
-            if (!preg_match("/^[a-zA-Z ]*$/", $name)) {
-                $errors['name'] = 'Name can only contain letters and spaces <br />';
+            $first_name = $_POST['first_name'];
+            if (!preg_match("/^[a-zA-Z ]*$/", $first_name)) {
+                $errors['first_name'] = 'First name can only contain letters and spaces <br />';
+            }
+        }
+
+        // Validate last name
+        if (empty($_POST['last_name'])) {
+            $errors['last_name'] = 'Last name must be provided <br />';
+        } else {
+            $last_name = $_POST['last_name'];
+            if (!preg_match("/^[a-zA-Z ]*$/", $last_name)) {
+                $errors['last_name'] = 'Last name can only contain letters and spaces <br />';
             }
         }
     
@@ -39,32 +49,30 @@ if(isset($_POST['submit'])) {
             // echo "error: " . $errors;
         } else {
 
-            $name = mysqli_real_escape_string($conn, $_POST['name']);
+            $first_name = mysqli_real_escape_string($conn, $_POST['first_name']);
+            $last_name = mysqli_real_escape_string($conn, $_POST['last_name']);
             $email = mysqli_real_escape_string($conn, $_POST['email']);
             $password = mysqli_real_escape_string($conn, $_POST['password']);
 
             // Hash the password before storing it
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            $sql = "INSERT INTO users(Name,Email,Password) VALUES ('$name', '$email', '$hashed_password')";
+            $sql = "INSERT INTO users(`First Name`, `Last Name`, Email, Password) VALUES ('$first_name', '$last_name', '$email', '$hashed_password')";
 
             if(mysqli_query($conn, $sql)) {
                 
-                header('Location:index.php ');
+                header('Location:index.php');
             } else {
-                echo 'query error: ' .''. mysqli_error($conn);
+                echo 'query error: ' . mysqli_error($conn);
             }
         }
     }
 }
 ?>
 
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
         .custom-shadow {
@@ -83,8 +91,8 @@ if(isset($_POST['submit'])) {
             margin: 0px auto;
         }
         .white-filter {
-    filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(180deg);
-}
+            filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(180deg);
+        }
     </style>
 </head>
 <body class="">
@@ -94,11 +102,15 @@ if(isset($_POST['submit'])) {
         <h2 class="text-3xl font-bold mb-6 text-center">Register</h2>
         <form action="Register.php" method="POST">
             <div class="mb-4">
-                <label for="name" class="block text-gray-700">Name</label>
-                <input type="text" id="name" name="name" class="mt-1 px-4 py-2 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"  >
-                <div class="text-red-600"><?php echo $errors['name']; ?> </div>
+                <label for="first_name" class="block text-gray-700">First Name</label>
+                <input type="text" id="first_name" name="first_name" class="mt-1 px-4 py-2 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" >
+                <div class="text-red-600"><?php echo $errors['first_name']; ?> </div>
             </div>
-          
+            <div class="mb-4">
+                <label for="last_name" class="block text-gray-700">Last Name</label>
+                <input type="text" id="last_name" name="last_name" class="mt-1 px-4 py-2 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" >
+                <div class="text-red-600"><?php echo $errors['last_name']; ?> </div>
+            </div>
             <div class="mb-4">
                 <label for="email" class="block text-gray-700">Email</label>
                 <input type="text" id="email" name="email" class="mt-1 px-4 py-2 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" >
