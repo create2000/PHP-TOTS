@@ -1,5 +1,5 @@
 <?php 
-     $conn = mysqli_connect("localhost","shawn","test1234","mydatabase");
+     $conn = mysqli_connect("localhost","shawn","test1234","hotel_management");
 
 
     if(!$conn) {

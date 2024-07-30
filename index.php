@@ -6,17 +6,14 @@ if (!$conn) {
     die("Connection error: " . mysqli_connect_error());
 }
 
-
-$errorMessage = ""; 
-
-
+$errorMessage = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
     // Prepare SQL statement
-    $sql = "SELECT id, `first name`, `last name`, email, password FROM users WHERE email = ?";
+    $sql = "SELECT id, first_name, last_name, email, password FROM users WHERE email = ?";
     $stmt = mysqli_prepare($conn, $sql); // Prepare statement for security
     mysqli_stmt_bind_param($stmt, "s", $email); // Bind email parameter
     mysqli_stmt_execute($stmt);
@@ -27,8 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_first name'] = $user['first name'];
-            $_SESSION['user_last name'] = $user['last name'];
+            $_SESSION['user_first name'] = $user['first_name'];
+            $_SESSION['user_last name'] = $user['last_name'];
             header("Location: landing.php");
             exit; 
         } else {
@@ -51,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Login</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body >
+<body>
     <?php include("templates/Header.php"); ?>
 
     <div class="min-h-screen flex items-center justify-center">
@@ -73,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
             <div class="mt-4 text-center">
                 <p class="text-gray-700">Don't have an account? <a href="register.php" class="text-blue-500 hover:underline">Register</a></p>
+                <p class="mt-2 text-gray-700">Login as Admin: <a href="Database\admin\admin_login.php" class="text-blue-500 hover:underline">Admin Login</a></p>
             </div>
         </div>
     </div>

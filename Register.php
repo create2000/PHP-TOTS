@@ -57,7 +57,7 @@ if(isset($_POST['submit'])) {
             // Hash the password before storing it
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            $sql = "INSERT INTO users(`First Name`, `Last Name`, Email, Password) VALUES ('$first_name', '$last_name', '$email', '$hashed_password')";
+            $sql = "INSERT INTO users(first_name, last_name, email, password) VALUES ('$first_name', '$last_name', '$email', '$hashed_password')";
 
             if(mysqli_query($conn, $sql)) {
                 
