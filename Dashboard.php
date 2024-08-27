@@ -1,17 +1,40 @@
 <?php
 session_start();
-$popupMessage = isset($_SESSION['popupMessage']) ? $_SESSION['popupMessage'] : '';
-unset($_SESSION['popupMessage']);
+
+require_once __DIR__ . '/vendor/autoload.php';
+use Dotenv\Dotenv;
+use GuzzleHttp\Client;
+
+// Load environment variables
+$dotenv = Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+$paystackSecretKey = getenv('paystack_secret_key');
+
+$payment_status = isset($_SESSION['payment_status']) ? $_SESSION['payment_status'] : '';
+
+// Clear the payment status after displaying it once
+if ($payment_status === 'success') {
+    $payment_amount = $_SESSION['payment_amount'];
+    $payment_email = $_SESSION['payment_email'];
+    unset($_SESSION['payment_status']);
+    unset($_SESSION['payment_amount']);
+    unset($_SESSION['payment_email']);
+    $totalPrice = 0; // Reset total price after successful payment
+} else {
+    $payment_amount = 0;
+    $payment_email = '';
+}
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit;
 }
 
-require 'C:\xampp\htdocs\PHP-Tots\config\db.php'; // Adjust path as necessary
+require 'C:\xampp\htdocs\PHP-Tots\config\db.php'; 
 
 $userId = $_SESSION['user_id'];
-$name = $_SESSION['user_last name'];
+$name = $_SESSION['user_last name']; 
 
 // Fetch booked rooms for the user
 $sql = "SELECT r.id, r.type, r.price, b.check_in_date, b.check_out_date 
@@ -85,21 +108,21 @@ $conn->close();
       z-index: 1000;
       opacity: 0;
       transition: opacity 1s ease-in-out;
-        }
+    }
 
     .popup.show {
       display: block;
       opacity: 1;
     }
 
-   .popup.hide {
+    .popup.hide {
       opacity: 0;
-   }
+    }
   </style>
 </head>
 <body class="bg-gray-100">
 
-<div id="popup" class="popup"><?php echo $popupMessage; ?></div>
+<div id="popup" class="popup"></div>
 <div class="flex h-screen">
   <!-- Sidebar -->
   <div id="sidebar" class="sidebar sidebar-expanded bg-gray-800 text-white flex flex-col">
@@ -129,8 +152,8 @@ $conn->close();
     </nav>
   </div>
 
-  <!-- Main content -->
-  <div class="flex-1 flex flex-col">
+ <!-- Main content -->
+ <div class="flex-1 flex flex-col">
     <!-- Header -->
     <header class="bg-white shadow p-4">
       <div class="flex justify-between items-center">
@@ -146,107 +169,138 @@ $conn->close();
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <?php if (!empty($bookedRooms)): ?>
           <?php foreach ($bookedRooms as $room): ?>
-            <div class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
-              <h2 class="text-lg font-semibold mb-2"><?php echo htmlspecialchars($room['type']); ?></h2>
-              <p class="text-gray-600">Price: $<?php echo htmlspecialchars($room['price']); ?> / night</p>
-              <p class="text-gray-600">Check-In Date: <?php echo htmlspecialchars($room['check_in_date']); ?></p>
-              <p class="text-gray-600">Check-Out Date: <?php echo htmlspecialchars($room['check_out_date']); ?></p>
-              <form action="templates\cancel_booking.php" method="POST" class="mt-4">
-                <input type="hidden" name="room_id" value="<?php echo htmlspecialchars($room['id']); ?>">
-                <button type="submit" class="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600">Cancel Booking</button>
-              </form>
+            <div class="bg-white shadow rounded-lg p-4">
+              <h2 class="text-lg font-semibold"><?php echo htmlspecialchars($room['type']); ?></h2>
+              <p>Check-in: <?php echo htmlspecialchars($room['check_in_date']); ?></p>
+              <p>Check-out: <?php echo htmlspecialchars($room['check_out_date']); ?></p>
+              <p>Price: $<?php echo htmlspecialchars($room['price']); ?></p>
+              <div class="mt-4 flex space-x-2">
+                <!-- Cancel Booking Button -->
+                <form action="./templates/cancel_booking.php" method="POST" class="inline-block">
+                  <input type="hidden" name="room_id" value="<?php echo htmlspecialchars($room['id']); ?>">
+                  <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">Cancel Booking</button>
+                </form>
+                
+               
+              </div>
             </div>
+           <!-- Hidden Review Form -->
+<div id="reviewForm" class="modal">
+    <div class="modal-content">
+        <span onclick="closeReviewModal()" class="close">&times;</span>
+        <form action="./templates/reviews.php" method="POST">
+            <h2 class="text-lg font-semibold">Leave a Review</h2>
+
+            <!-- Room ID Input -->
+            <div class="mt-4">
+                <label for="room_id" class="block text-sm font-medium text-gray-700">Room ID</label>
+                <input type="text" id="room_id" name="room_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            </div>
+
+            <!-- Rating Input -->
+            <div class="mt-4">
+                <label for="rating" class="block text-sm font-medium text-gray-700">Rating</label>
+                <input type="number" id="rating" name="rating" min="1" max="5" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            </div>
+
+            <!-- Comment Input -->
+            <div class="mt-4">
+                <label for="comment" class="block text-sm font-medium text-gray-700">Comment</label>
+                <textarea id="comment" name="comment" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-4">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Submit Review</button>
+                <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600" onclick="toggleReviewForm()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
           <?php endforeach; ?>
         <?php else: ?>
-          <p class="text-gray-600">You have no booked rooms.</p>
+          <p>No booked rooms found.</p>
         <?php endif; ?>
       </div>
-      
-      <!-- Payment section -->
-      <div class="mt-6">
-        <h2 class="text-xl font-semibold">Total Price: $<?php echo htmlspecialchars($totalPrice); ?></h2>
-        <form action="templates\payment.php" method="post" class="mt-4">
-          <input type="hidden" name="total_price" value="<?php echo htmlspecialchars($totalPrice); ?>">
-          <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Proceed to Payment</button>
-      </form>
-      </div>
 
-      <!-- Leave a Review Button -->
-      <div class="-mt-8 text-center">
-        <button id="leaveReviewBtn" class="bg-green-500 text-white py-2 px-4  rounded hover:bg-green-600">Leave a Review</button>
-      </div>
+      <!-- Initialize Payment Button -->
+      <?php if ($totalPrice > 0 && $payment_status !== 'success'): ?>
+        <div class="bg-gray-100 p-4 rounded-lg mt-4">
+          <form action="./templates/payment.php" method="POST">
+            <input type="hidden" name="total_price" value="<?php echo htmlspecialchars($totalPrice); ?>">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Initialize Payment</button>
+          </form>
+
+          <?php foreach($bookedRooms as $room) ;
+             echo '<button class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600" onclick="openReviewModal(' . htmlspecialchars($room['id']) . ')">Leave a Review</button>';
+             echo '</div></div>';
+          ?>
+         
+      <?php endif; ?>
+
+      <!-- Display total price -->
+      <?php if ($totalPrice > 0 && $payment_status !== 'success'): ?>
+        <div class="bg-gray-100 p-4 rounded-lg mt-4">
+          <h2 class="text-lg font-semibold">Total Price</h2>
+          <p>$<?php echo htmlspecialchars($totalPrice); ?></p>
+        </div>
+      <?php endif; ?>
+
+      <?php if ($payment_status === 'success'): ?>
+        <div class="bg-green-100 text-green-800 p-4 rounded-lg mt-4">
+          <h2 class="text-lg font-semibold">Payment Successful!</h2>
+          <p>Thank you, <?php echo htmlspecialchars($name); ?>. Your payment of $<?php echo htmlspecialchars($payment_amount); ?> was successful.</p>
+          <p>A receipt has been sent to <?php echo htmlspecialchars($payment_email); ?>.</p>
+        </div>
+      <?php endif; ?>
     </main>
   </div>
 </div>
 
-<!-- Modal -->
-<!-- Inside the Modal in dashboard.php -->
-<div id="reviewModal" class="modal">
-  <div class="modal-content">
-    <span id="closeModal" class="cursor-pointer text-gray-500">&times;</span>
-    <h2 class="text-lg font-bold mb-4">Leave a Review</h2>
-    <form action="templates/reviews.php" method="POST">
-      <input type="hidden" name="room_id" value="<?php echo htmlspecialchars($room['id']); ?>">
-      <div class="mb-4">
-        <label for="rating" class="block text-gray-700">Rating:</label>
-        <select id="rating" name="rating" class="block w-full mt-2 p-2 border border-gray-300 rounded">
-          <option value="1">1 - Very Poor</option>
-          <option value="2">2 - Poor</option>
-          <option value="3">3 - Average</option>
-          <option value="4">4 - Good</option>
-          <option value="5">5 - Excellent</option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label for="comment" class="block text-gray-700">Comment:</label>
-        <textarea id="comment" name="comment" rows="4" class="block w-full mt-2 p-2 border border-gray-300 rounded" placeholder="Write your review here..."></textarea>
-      </div>
-      <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Submit Review</button>
-    </form>
-  </div>
-  
-</div>
-
-<?php if ($popupMessage): ?>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                var popup = document.getElementById('popup');
-                popup.classList.add('show');
-                setTimeout(function() {
-                    popup.classList.add('hide');
-                    setTimeout(function() {
-                        popup.style.display = 'none';
-                    }, 1000); // Wait for the transition to complete
-                }, 3000); // Show for 3 seconds
-            });
-        </script>
-    <?php endif; ?>
-
 <script>
-  // JavaScript to handle modal display and dimming
-  const reviewModal = document.getElementById('reviewModal');
-  const leaveReviewBtn = document.getElementById('leaveReviewBtn');
-  const closeModal = document.getElementById('closeModal');
-  const body = document.body;
+document.getElementById('toggleSidebar').addEventListener('click', function () {
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar.classList.contains('sidebar-expanded')) {
+    sidebar.classList.remove('sidebar-expanded');
+    sidebar.classList.add('sidebar-collapsed');
+  } else {
+    sidebar.classList.remove('sidebar-collapsed');
+    sidebar.classList.add('sidebar-expanded');
+  }
+});
 
-  leaveReviewBtn.addEventListener('click', function() {
-    reviewModal.style.display = 'flex';
-    body.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-  });
+document.addEventListener('DOMContentLoaded', function() {
+  const popup = document.getElementById('popup');
+  if (popup.textContent.trim()) {
+    popup.classList.add('show');
+    setTimeout(function() {
+      popup.classList.remove('show');
+      popup.classList.add('hide');
+    }, 3000);
+  }
+});
 
-  closeModal.addEventListener('click', function() {
-    reviewModal.style.display = 'none';
-    body.style.backgroundColor = '';
-  });
-
-  window.addEventListener('click', function(event) {
-    if (event.target === reviewModal) {
-      reviewModal.style.display = 'none';
-      body.style.backgroundColor = '';
+function toggleReviewForm() {
+    const reviewForm = document.getElementById('reviewForm');
+    if (reviewForm.style.display === 'none' || !reviewForm.style.display) {
+        reviewForm.style.display = 'flex';
+    } else {
+        reviewForm.style.display = 'none';
     }
-  });
+}
+function openReviewModal(roomId) {
+    document.getElementById('room_id').value = roomId; // Set the room ID in the hidden field
+    document.getElementById('reviewForm').style.display = 'flex';
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewForm').style.display = 'none';
+}
+
+
 </script>
 
 </body>
 </html>
-

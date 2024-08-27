@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $last_name = trim($_POST['last_name']);
     $password = $_POST['password'];
 
-    $sql = "SELECT * FROM admin WHERE `first name` = ? AND `last name` = ?";
+    $sql = "SELECT * FROM admin WHERE first_name = ? AND last_name = ?";
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
         die("Prepare failed: (" . $conn->errno . ") " . $conn->error);
@@ -28,12 +28,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $result = $stmt->get_result();
     if ($result->num_rows == 1) {
         $admin = $result->fetch_assoc();
-        if (password_verify($password, $admin['Password'])) {
+       
+        if (password_verify($password, $admin['password'])) {
+            session_regenerate_id(true); // Regenerate session ID for security
             $_SESSION['admin_id'] = $admin['id'];
             header('Location: admin_dashboard.php');
             exit();
         } else {
-            $errorMessage = "Invalid password";
+            $errorMessage = "Invalid credentials";
         }
     } else {
         $errorMessage = "Invalid credentials";
@@ -52,16 +54,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <style>
          .container {
-            padding: 2rem 1rem; /* Adjust padding to reduce white space */
+            padding: 2rem 1rem;
         }
     </style>
 </head>
-<body class="bg-gray-100 ">
+<body class="bg-gray-100">
 <?php include("../../templates/Header.php"); ?>
     <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6 mt-4">
         <h2 class="text-2xl font-bold mb-4">Admin Login</h2>
         <form action="admin_login.php" method="POST">
-            <div class="mb-4 ">
+            <div class="mb-4">
                 <label for="first_name" class="block text-gray-700 font-bold mb-2">First Name</label>
                 <input type="text" id="first_name" name="first_name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200" required>
             </div>

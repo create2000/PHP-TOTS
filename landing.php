@@ -13,7 +13,7 @@ $result = $conn->query($sql);
 $reviewsSql = "
     SELECT r.id AS review_id, r.rating, r.comment AS review_comment, 
            CONCAT(u.first_name, ' ', u.last_name) AS reviewer_name, r.created_at,
-           rr.id AS reply_id, rr.reply AS reply_comment, CONCAT(a.`First name`, ' ', a.`Last name`) AS replier_name, rr.created_at AS reply_created_at
+           rr.id AS reply_id, rr.reply AS reply_comment, CONCAT(a.first_name, ' ', a.last_name) AS replier_name, rr.created_at AS reply_created_at
     FROM reviews r
     LEFT JOIN users u ON r.user_id = u.id
     LEFT JOIN review_replies rr ON r.id = rr.review_id
@@ -128,7 +128,8 @@ if (!$reviewsResult) {
                     $roomStatus = $row['status'];
 
                     echo '<div class="card custom-shadow">';
-                    echo '<img class="w-full h-64 object-cover object-center rounded-t-lg" src="' . htmlspecialchars($roomImagePath) . '" alt="' . htmlspecialchars($roomType) . '">';
+                    echo '<img class="w-full h-64 object-cover object-center rounded-t-lg" src="' . htmlspecialchars('/PHP-TOTS/' . $roomImagePath) . '" alt="' . htmlspecialchars($roomType) . '">';
+
                     echo '<div class="card-content">';
                     echo '<h2 class="text-xl font-bold">' . htmlspecialchars($roomType) . '</h2>';
                     echo '<p class="text-gray-600">&#x20A6; ' . htmlspecialchars($roomPrice) . ' / night</p>';

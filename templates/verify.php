@@ -17,7 +17,7 @@ $reference = $_GET['reference'] ?? '';
 $client = new Client([
     'base_uri' => 'https://api.paystack.co',
     'headers' => [
-        'Authorization' => 'Bearer ' . $paystackSecretKey,
+        'Authorization' => 'Bearer sk_test_8b321d39a440908f64adcc8b8718b81c4cba5318',
         'Content-Type' => 'application/json',
     ],
 ]);

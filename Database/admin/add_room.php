@@ -25,6 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $check = getimagesize($image_file["tmp_name"]);
             if ($check !== false) {
                 echo "File is an image - " . $check["mime"] . ".";
+                header('Location: admin_dashboard.php');
                 $uploadOk = 1;
             } else {
                 echo "File is not an image.";
