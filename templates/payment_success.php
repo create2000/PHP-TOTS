@@ -16,12 +16,25 @@ $paystackSecretKey = getenv('paystack_secret_key');
 $client = new Client([
     'base_uri' => 'https://api.paystack.co',
     'headers' => [
-        'Authorization' => "Bearer sk_test_8b321d39a440908f64adcc8b8718b81c4cba5318",
+        'Authorization' => 'Bearer sk_test_8b321d39a440908f64adcc8b8718b81c4cba5318',
         'Content-Type' => 'application/json',
     ],
     'timeout' => 10.0, // Set a timeout to prevent hanging
     'verify' => false, // Disable SSL verification for local testing
 ]);
+
+// Database connection
+$servername = "localhost";
+$username = "shawn"; // replace with your database username
+$password = "test1234"; // replace with your database password
+$dbname = "hotel_management"; // replace with your database name
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
 // Retrieve the transaction reference from the query parameters
 $reference = isset($_GET['reference']) ? $_GET['reference'] : '';
@@ -36,9 +49,29 @@ if ($reference) {
         if ($data['status'] && $data['data']['status'] === 'success') {
             $amount = $data['data']['amount'] / 100; // Convert from kobo to naira
             $email = $data['data']['customer']['email'];
+            $paymentDate = date('Y-m-d H:i:s'); // Get the current date and time
+
+            // Store payment details in session
             $_SESSION['payment_status'] = 'success';
             $_SESSION['payment_amount'] = $amount;
             $_SESSION['payment_email'] = $email;
+
+            // Fetch user_id (room_id is no longer used)
+            if (!isset($_SESSION['user_id'])) {
+                die('User ID is not set. Please ensure you are logged in.');
+            }
+
+            $userId = $_SESSION['user_id'];
+
+            // Insert payment details into the database (without room_id)
+            $stmt = $conn->prepare("INSERT INTO payments (user_id, amount, payment_status, payment_email, payment_date) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("iisss", $userId, $amount, $_SESSION['payment_status'], $email, $paymentDate);
+
+            if (!$stmt->execute()) {
+                echo "Error: " . $stmt->error;
+            } 
+
+            $stmt->close();
         } else {
             die('Payment verification failed.');
         }
@@ -48,6 +81,8 @@ if ($reference) {
 } else {
     die('No reference provided.');
 }
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>

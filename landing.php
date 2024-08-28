@@ -1,5 +1,7 @@
 <?php
 session_start();
+
+
 require 'C:\xampp\htdocs\PHP-Tots\config\db.php'; // Adjust path as necessary
 
 $isLoggedIn = isset($_SESSION['user_id']);
@@ -220,14 +222,16 @@ if (!$reviewsResult) {
     <?php endif; ?>
 
     <script>
-        function openBookingModal(roomId) {
-            document.getElementById('room_id').value = roomId;
-            document.getElementById('bookingModal').classList.remove('hidden');
-        }
+     function openBookingModal(roomId) {
+    document.getElementById('room_id').value = roomId; // Set room_id
+    sessionStorage.setItem('booking_room_id', roomId); // Store room_id in sessionStorage
+    document.getElementById('bookingModal').classList.remove('hidden'); // Show modal
+}
 
-        function closeBookingModal() {
-            document.getElementById('bookingModal').classList.add('hidden');
-        }
+function closeBookingModal() {
+    document.getElementById('bookingModal').classList.add('hidden');
+}
+
     </script>
 </body>
 </html>

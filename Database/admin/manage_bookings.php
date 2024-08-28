@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['booking_id'])) {
         $_SESSION['error_message'] = "Error updating booking status: " . $conn->error;
     }
 
-    header("Location: manage_booking.php");
+    header("Location: manage_bookings.php");
     exit();
 }
 
@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_booking_id'])) 
         $_SESSION['error_message'] = "Error deleting booking: " . $conn->error;
     }
 
-    header("Location: manage_booking.php");
+    header("Location: manage_bookings.php");
     exit();
 }
 
@@ -139,7 +139,7 @@ $result = $searchStmt->get_result();
         ?>
 
         <!-- Search and Filter Form -->
-        <form method="get" class="mb-6">
+        <form method="GET" class="mb-6">
             <input type="text" name="search" placeholder="Search by guest name" class="border-gray-300 rounded-md shadow-sm" value="<?php echo htmlspecialchars($searchTerm); ?>">
             <input type="date" name="start_date" class="border-gray-300 rounded-md shadow-sm" value="<?php echo htmlspecialchars($startDate); ?>">
             <input type="date" name="end_date" class="border-gray-300 rounded-md shadow-sm" value="<?php echo htmlspecialchars($endDate); ?>">
@@ -162,7 +162,7 @@ $result = $searchStmt->get_result();
                     echo '<p>Check-in: ' . htmlspecialchars($row['check_in_date']) . '</p>';
                     echo '<p>Check-out: ' . htmlspecialchars($row['check_out_date']) . '</p>';
                     echo '<p>Status: ' . htmlspecialchars($row['status']) . '</p>';
-                    echo '<form action="manage_booking.php" method="post" class="mt-4">';
+                    echo '<form action="manage_bookings.php" method="POST" class="mt-4">';
                     echo '<input type="hidden" name="booking_id" value="' . $row['id'] . '">';
                     echo '<select name="status" class="border-gray-300 rounded-md shadow-sm">';
                     echo '<option value="confirmed" ' . ($row['status'] == 'confirmed' ? 'selected' : '') . '>Confirmed</option>';
@@ -171,7 +171,7 @@ $result = $searchStmt->get_result();
                     echo '</select>';
                     echo '<button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mt-2">Update Status</button>';
                     echo '</form>';
-                    echo '<form action="manage_booking.php" method="post" class="mt-4">';
+                    echo '<form action="manage_bookings.php" method="POST" class="mt-4">';
                     echo '<input type="hidden" name="delete_booking_id" value="' . $row['id'] . '">';
                     echo '<button type="submit" class="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600">Delete Booking</button>';
                     echo '</form>';
