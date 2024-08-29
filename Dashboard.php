@@ -11,24 +11,32 @@ $dotenv->load();
 
 $paystackSecretKey = getenv('paystack_secret_key');
 
+// Check if payment was successful
 $payment_status = isset($_SESSION['payment_status']) ? $_SESSION['payment_status'] : '';
+$payment_completed = isset($_SESSION['payment_completed']) ? $_SESSION['payment_completed'] : false;
 
 if ($payment_status === 'success') {
-  $payment_amount = $_SESSION['payment_amount'];
-  $payment_email = $_SESSION['payment_email'];
-  unset($_SESSION['payment_status']);
-  unset($_SESSION['payment_amount']);
-  unset($_SESSION['payment_email']);
-  // Reset total price after successful payment
-  $totalPrice = 0;
+    $payment_amount = $_SESSION['payment_amount'];
+    $payment_email = $_SESSION['payment_email'];
+    
+    // Set payment completed flag
+    $_SESSION['payment_completed'] = true;
 
-  // Set notification for successful payment
-  $_SESSION['notification'] = "Payment of $$payment_amount was successful!";
-  $_SESSION['notification_seen'] = false; // Set notification as unseen
+    unset($_SESSION['payment_status']);
+    unset($_SESSION['payment_amount']);
+    unset($_SESSION['payment_email']);
+    
+    // Reset total price after successful payment
+    $totalPrice = 0;
+
+    // Set notification for successful payment
+    $_SESSION['notification'] = "Payment of $$payment_amount was successful!";
+    $_SESSION['notification_seen'] = false; // Set notification as unseen
 } else {
-  $payment_amount = 0;
-  $payment_email = '';
+    $payment_amount = 0;
+    $payment_email = '';
 }
+
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
@@ -54,13 +62,14 @@ $stmt->close();
 
 // Calculate total price only for unpaid bookings if payment has not been successful
 $totalPrice = 0;
-if ($payment_status !== 'success') {
+if ($payment_status !== 'success' && !$payment_completed) {
     foreach ($bookedRooms as $room) {
         if ($room['status'] == 'pending') {
             $totalPrice += $room['price'];
         }
     }
 }
+
 
 $conn->close();
 ?>
@@ -207,20 +216,42 @@ $conn->close();
       <?php endforeach; ?>
     </div>
 
-    <?php if ($payment_status !== 'success' && $totalPrice > 0): ?>
-      <div class="mt-4">
+    <?php if (!$payment_completed && $totalPrice > 0): ?>
+    <div class="mt-4">
         <p class="text-lg font-semibold">Total Price: $<?php echo htmlspecialchars($totalPrice); ?></p>
         <form action="./templates/payment.php" method="post">
-          <input type="hidden" name="total_price" value="<?php echo htmlspecialchars($totalPrice); ?>">
-          <button type="submit" class="bg-green-500 text-white p-2 rounded hover:bg-green-700">Initialize Payment</button>
+            <input type="hidden" name="total_price" value="<?php echo htmlspecialchars($totalPrice); ?>">
+            <button type="submit" class="bg-green-500 text-white p-2 rounded hover:bg-green-700">Initialize Payment</button>
         </form>
-      </div>
-    <?php endif; ?>
+    </div>
+<?php endif; ?>
+
 
     <!-- Display Review Button -->
-<?php if ($payment_status === 'success' && !empty($bookedRooms)): ?>
-    <button class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600" onclick="toggleReviewForm()">Leave a Review</button>
+    <?php if ($payment_completed && !empty($bookedRooms)): ?>
+    <button class="bg-blue-500 text-white mt-4 px-4 py-2 rounded-md hover:bg-blue-600" onclick="toggleReviewForm()">Leave a Review</button>
 <?php endif; ?>
+
+<!-- Review Form (Initially Hidden) -->
+<div id="reviewForm" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2 class="text-lg font-semibold mb-4">Leave a Review</h2>
+            <form action="./templates/reviews.php" method="post">
+                <input type="hidden" name="room_id" value="<?php echo isset($room['id']) ? htmlspecialchars($room['id']) : ''; ?>">
+                <div class="mb-4">
+                    <label for="rating" class="block text-sm font-medium text-gray-700">Rating:</label>
+                    <input type="number" name="rating" id="rating" min="1" max="5" class="w-full mt-1 border-gray-300 rounded-md">
+                </div>
+                <div class="mb-4">
+                    <label for="comment" class="block text-sm font-medium text-gray-700">Comment:</label>
+                    <textarea name="comment" id="comment" rows="4" class="w-full mt-1 border-gray-300 rounded-md"></textarea>
+                </div>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Submit Review</button>
+                <button type="button" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600" onclick="toggleReviewForm()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
   </div>
 </div>
 
@@ -248,6 +279,12 @@ function showPopup(message) {
       showPopup("<?php echo addslashes($_SESSION['notification']); ?>");
     });
 <?php endif; ?>
+
+// Toggle the visibility of the review form
+function toggleReviewForm() {
+        const form = document.getElementById('reviewForm');
+        form.style.display = form.style.display === 'flex' ? 'none' : 'flex';
+    }
 </script>
 
 </body>
